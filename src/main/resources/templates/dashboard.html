@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Endered — Dashboard Verde</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #060d06;
+            --bg2: #0c160c;
+            --surface: #101d10;
+            --surface2: #162416;
+            --border: rgba(74, 222, 128, 0.12);
+            --green: #4ade80;
+            --green2: #22c55e;
+            --green3: #16a34a;
+            --greenDim: rgba(74, 222, 128, 0.08);
+            --greenGlow: rgba(74, 222, 128, 0.25);
+            --text: #e8f5e8;
+            --textMid: #8fba8f;
+            --textDim: #4a6a4a;
+            --accent: #a3e635;
+            --accentDim: rgba(163, 230, 53, 0.12);
+            --warn: #facc15;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse 60% 40% at 30% 20%, rgba(34,197,94,0.06) 0%, transparent 60%),
+                        radial-gradient(ellipse 40% 60% at 80% 70%, rgba(74,222,128,0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* NAV */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(6,13,6,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--green);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-dot {
+            width: 10px; height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 8px var(--green); transform: scale(1); }
+            50% { box-shadow: 0 0 20px var(--green), 0 0 40px var(--greenGlow); transform: scale(1.2); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--textMid);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active { color: var(--green); }
+
+        .nav-cta {
+            background: var(--green);
+            color: var(--bg);
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.875rem;
+            font-family: 'Syne', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--greenGlow);
+        }
+
+        /* MAIN LAYOUT */
+        main {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* HERO HEADER */
+        .hero {
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--green);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.75rem;
+            background: var(--greenDim);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 100px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            color: var(--text);
+            letter-spacing: -0.03em;
+        }
+
+        .hero h1 span {
+            color: var(--green);
+        }
+
+        .hero-sub {
+            margin-top: 0.75rem;
+            color: var(--textMid);
+            font-size: 1rem;
+            font-weight: 400;
+            max-width: 600px;
+        }
+
+        /* GRID */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-3-1 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* METRIC CARD */
+        .metric {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .metric::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--green), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .metric:hover::before { opacity: 1; }
+        .metric:hover {
+            border-color: rgba(74, 222, 128, 0.3);
+            box-shadow: 0 0 30px rgba(74, 222, 128, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--green);
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .metric-value.accent { color: var(--accent); }
+        .metric-value.warn { color: var(--warn); }
+
+        .metric-unit {
+            font-size: 0.8rem;
+            color: var(--textDim);
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--textMid);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-sub {
+            font-size: 0.7rem;
+            color: var(--textDim);
+            margin-top: 0.25rem;
+        }
+
+        /* PANEL */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 1.5rem;
+        }
+
+        /* MAP */
+        #heatmap {
+            width: 100%;
+            height: 460px;
+            border-radius: 0 0 16px 16px;
+            filter: saturate(0.8) brightness(0.95);
+        }
+
+        /* CHART */
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        /* TABLE */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.6rem 1rem;
+            color: var(--textDim);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(74,222,128,0.05);
+            color: var(--textMid);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tr:hover td { background: var(--greenDim); color: var(--text); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-green { background: rgba(74,222,128,0.15); color: var(--green); }
+        .badge-yellow { background: rgba(250,204,21,0.15); color: var(--warn); }
+
+        /* TYPE DOTS */
+        .type-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .type-dot::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            flex-shrink: 0;
+        }
+
+        /* REFRESH */
+        .refresh-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--textMid);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .refresh-btn:hover { border-color: var(--green); color: var(--green); }
+
+        /* LOADING OVERLAY */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-ring {
+            width: 60px; height: 60px;
+            border: 3px solid var(--border);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-family: 'Syne', sans-serif;
+            color: var(--green);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* COUNTER ANIMATION */
+        .counting { transition: all 0.5s ease; }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--textDim);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        footer strong { color: var(--green); }
+
+        @media (max-width: 900px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
+            main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading">
+    <div class="loading-ring"></div>
+    <div class="loading-text">Carregando dados ambientais...</div>
+</div>
+
+<!-- NAV -->
+<nav>
+    <div class="logo">
+        <div class="logo-dot"></div>
+        endered
+    </div>
+    <ul class="nav-links">
+        <li><a href="/" class="active">Dashboard</a></li>
+        <li><a href="#mapa">Mapa</a></li>
+        <li><a href="#impacto">Impacto</a></li>
+    </ul>
+    <a href="/solicitar" class="nav-cta">+ Solicitar Cartão Digital</a>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-label">
+            <span>🌱</span> Impacto Ambiental em Tempo Real
+        </div>
+        <h1>Cartões digitais.<br><span>Planeta preservado.</span></h1>
+        <p class="hero-sub">
+            Cada cartão digital emitido é uma escolha pelo futuro. Acompanhe o impacto coletivo da digitalização.
+        </p>
+    </div>
+
+    <!-- METRICS ROW 1 -->
+    <div class="grid-4" id="metricsRow">
+        <div class="metric">
+            <div class="metric-icon">🌿</div>
+            <div class="metric-value counting" id="m-cartoes">—</div>
+            <div class="metric-label">Cartões Digitais Ativos</div>
+            <div class="metric-sub">Cada um substituiu um cartão físico de PVC</div>
+        </div>
+        <div class="metric">
+            <div class="metric-icon">☁️</div>
+            <div>
+                <span class="metric-value counting" id="m-co2">—</span>
+                <span class="metric-unit">kg CO₂</span>
+            </div>
+            <div class="metric-label">Não emitidos na atmosfera</div>
+            <div class="metric-sub">Equivale a <span id="m-km">—</span> km de carro não percorridos</div>
+        </div>
+        <div class="metric">
+            <div class="metric-icon">🌊</div>
+            <div>
+                <span class="metric-value accent counting" id="m-agua">—</span>
+                <span class="metric-unit">L</span>
+            </div>
+            <div class="metric-label">Água economizada</div>
+            <div class="metric-sub">Na fabricação de cartões PVC</div>
+        </div>
+        <div class="metric">
+            <div class="metric-icon">🌳</div>
+            <div>
+                <span class="metric-value warn counting" id="m-arvores">—</span>
+            </div>
+            <div class="metric-label">Árvores equivalentes</div>
+            <div class="metric-sub">Em absorção de CO₂ por ano</div>
+        </div>
+    </div>
+
+    <!-- METRICS ROW 2 -->
+    <div class="grid-4" style="margin-bottom:2rem;">
+        <div class="metric">
+            <div class="metric-icon">♻️</div>
+            <div>
+                <span class="metric-value counting" id="m-plastico">—</span>
+                <span class="metric-unit">kg PVC</span>
+            </div>
+            <div class="metric-label">Plástico não gerado</div>
+            <div class="metric-sub">Eliminado da cadeia de produção</div>
+        </div>
+        <div class="metric">
+            <div class="metric-icon">⚡</div>
+            <div>
+                <span class="metric-value counting" id="m-energia">—</span>
+                <span class="metric-unit">kWh</span>
+            </div>
+            <div class="metric-label">Energia economizada</div>
+            <div class="metric-sub">No processo de fabricação</div>
+        </div>
+        <div class="metric">
+            <div class="metric-icon">📊</div>
+            <div class="metric-value counting" id="m-total">—</div>
+            <div class="metric-label">Total de solicitações</div>
+            <div class="metric-sub">Desde o início do programa</div>
+        </div>
+        <div class="metric" style="background: linear-gradient(135deg, rgba(74,222,128,0.1) 0%, rgba(22,163,74,0.05) 100%); border-color: rgba(74,222,128,0.3);">
+            <div class="metric-icon">🏆</div>
+            <div class="metric-value" style="font-size:1.5rem; color:var(--accent);">100%</div>
+            <div class="metric-label">Taxa de digitalização</div>
+            <div class="metric-sub">Meta: Zero cartões físicos em 2026</div>
+        </div>
+    </div>
+
+    <!-- MAPA DE CALOR -->
+    <div id="mapa" class="panel" style="margin-bottom:1.5rem;">
+        <div class="panel-header">
+            <div class="panel-title">
+                🗺️ Mapa de Calor — Digitalização por Região
+            </div>
+            <button class="refresh-btn" onclick="loadHeatmap()">↻ Atualizar</button>
+        </div>
+        <div id="heatmap"></div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="grid-2">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">📈 Solicitações por Mês</div>
+            </div>
+            <div class="panel-body">
+                <div class="chart-wrap">
+                    <canvas id="chartMensal"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">🎴 Distribuição por Tipo de Cartão</div>
+            </div>
+            <div class="panel-body">
+                <div class="chart-wrap">
+                    <canvas id="chartTipo"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECENT TABLE -->
+    <div id="impacto" class="panel">
+        <div class="panel-header">
+            <div class="panel-title">📋 Últimas Solicitações</div>
+            <span style="font-size:0.75rem; color:var(--textDim);">Atualizado em tempo real</span>
+        </div>
+        <div class="panel-body table-wrap" style="padding:0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Localização</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>CO₂ Evitado</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--textDim);">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <strong>endered</strong> — Plataforma de Cartões Digitais &bull;
+    Contribuindo para um futuro com menos resíduos plásticos &bull;
+    Dados calculados com base em estudos de ciclo de vida de cartões PVC
+</footer>
+
+<script>
+let map, heatLayer;
+let chartMensal, chartTipo;
+
+const TIPOS_LABEL = {
+    'CARTAO_BENEFICIOS': 'Benefícios',
+    'CARTAO_PRESENTE': 'Presente',
+    'CARTAO_FIDELIDADE': 'Fidelidade',
+    'CARTAO_CORPORATIVO': 'Corporativo'
+};
+
+// ANIMATED COUNTER
+function animateValue(id, target, decimals = 0) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const duration = 1800;
+    const start = performance.now();
+    const from = 0;
+
+    function update(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 4);
+        const val = from + (target - from) * ease;
+        el.textContent = decimals > 0
+            ? val.toFixed(decimals).replace('.', ',')
+            : Math.round(val).toLocaleString('pt-BR');
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// LOAD DASHBOARD
+async function loadDashboard() {
+    try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+
+        const imp = data.impacto;
+        animateValue('m-cartoes', imp.totalCartoesAtivos);
+        animateValue('m-co2', imp.co2NaoEmitidoKg, 1);
+        animateValue('m-agua', imp.aguaEconomizadaL, 1);
+        animateValue('m-arvores', imp.arvoresEquivalentes, 1);
+        animateValue('m-plastico', imp.plasticoNaoGeradoKg, 3);
+        animateValue('m-energia', imp.energiaEconomizadaKWh, 2);
+        animateValue('m-total', imp.totalCartoesSolicitados);
+
+        document.getElementById('m-km').textContent =
+            Math.round(imp.kmDrivenEquivalent).toLocaleString('pt-BR');
+
+        // Charts
+        renderMensalChart(data.dadosMensais || {});
+        renderTipoChart(data.porTipoCartao || {});
+
+        // Table
+        renderTable(data.recentesSolicitacoes || []);
+
+        // Hide loading
+        document.getElementById('loading').style.opacity = '0';
+        setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+
+    } catch (e) {
+        console.error('Erro ao carregar dashboard:', e);
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+// HEATMAP
+async function loadHeatmap() {
+    try {
+        const res = await fetch('/api/heatmap');
+        const points = await res.json();
+
+        if (heatLayer) map.removeLayer(heatLayer);
+
+        const latlngs = points.map(p => [p.latitude, p.longitude, p.intensidade]);
+
+        heatLayer = L.heatLayer(latlngs, {
+            radius: 45,
+            blur: 30,
+            maxZoom: 10,
+            gradient: {
+                0.0: '#0f2d0f',
+                0.2: '#1a5c1a',
+                0.4: '#22c55e',
+                0.6: '#4ade80',
+                0.8: '#a3e635',
+                1.0: '#facc15'
+            },
+            max: 1.0
+        }).addTo(map);
+
+        // Add city markers
+        points.forEach(p => {
+            const color = p.intensidade > 0.7 ? '#facc15' : p.intensidade > 0.4 ? '#4ade80' : '#22c55e';
+            L.circleMarker([p.latitude, p.longitude], {
+                radius: 6 + p.intensidade * 8,
+                fillColor: color,
+                color: 'rgba(0,0,0,0.5)',
+                weight: 1,
+                fillOpacity: 0.85
+            })
+            .bindPopup(`
+                <div style="font-family:'DM Sans',sans-serif; min-width:160px;">
+                    <strong style="color:#22c55e;">${p.cidade} - ${p.estado}</strong><br>
+                    <span style="font-size:0.85em; color:#666;">
+                        🌿 ${p.quantidade} cartão(ões) digital(is)<br>
+                        💨 ${(p.quantidade * 0.150).toFixed(2)} kg CO₂ evitados
+                    </span>
+                </div>
+            `)
+            .addTo(map);
+        });
+
+    } catch (e) {
+        console.error('Erro ao carregar heatmap:', e);
+    }
+}
+
+// INIT MAP
+function initMap() {
+    map = L.map('heatmap', {
+        center: [-15.0, -52.0],
+        zoom: 4,
+        zoomControl: true
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CartoDB',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+
+    loadHeatmap();
+}
+
+// CHARTS
+function renderMensalChart(mensal) {
+    const ctx = document.getElementById('chartMensal').getContext('2d');
+    const labels = Object.keys(mensal);
+    const values = Object.values(mensal);
+
+    if (chartMensal) chartMensal.destroy();
+
+    chartMensal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Cartões digitalizados',
+                data: values,
+                backgroundColor: 'rgba(74,222,128,0.3)',
+                borderColor: '#4ade80',
+                borderWidth: 2,
+                borderRadius: 6,
+                hoverBackgroundColor: 'rgba(74,222,128,0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(74,222,128,0.05)' },
+                    ticks: { color: '#8fba8f', font: { family: 'DM Sans', size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(74,222,128,0.08)' },
+                    ticks: { color: '#8fba8f', font: { family: 'DM Sans', size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function renderTipoChart(porTipo) {
+    const ctx = document.getElementById('chartTipo').getContext('2d');
+    const labels = Object.keys(porTipo).map(k => TIPOS_LABEL[k] || k);
+    const values = Object.values(porTipo);
+
+    if (chartTipo) chartTipo.destroy();
+
+    chartTipo = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ['#4ade80','#22c55e','#a3e635','#facc15'],
+                borderColor: '#101d10',
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#8fba8f',
+                        font: { family: 'DM Sans', size: 12 },
+                        padding: 16,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+// TABLE
+function renderTable(cartoes) {
+    const tbody = document.getElementById('tableBody');
+    if (!cartoes.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--textDim);">Nenhuma solicitação encontrada</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = cartoes.map(c => {
+        const data = c.dataSolicitacao
+            ? new Date(c.dataSolicitacao).toLocaleDateString('pt-BR')
+            : '—';
+        const tipo = TIPOS_LABEL[c.tipoCartao] || c.tipoCartao;
+        const status = c.status === 'ATIVO'
+            ? '<span class="badge badge-green">✓ Ativo</span>'
+            : '<span class="badge badge-yellow">⏳ ' + c.status + '</span>';
+        const co2 = (0.150).toFixed(3);
+
+        return `<tr>
+            <td style="color:var(--text); font-weight:500;">${c.nomeCompleto}</td>
+            <td><span class="type-dot">${tipo}</span></td>
+            <td>${c.cidade}, ${c.estado}</td>
+            <td>${status}</td>
+            <td>${data}</td>
+            <td style="color:var(--green); font-family:'Syne',sans-serif; font-weight:700;">${co2} kg</td>
+        </tr>`;
+    }).join('');
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    loadDashboard();
+    // Auto-refresh every 30s
+    setInterval(loadDashboard, 30000);
+});
+</script>
+</body>
+</html>

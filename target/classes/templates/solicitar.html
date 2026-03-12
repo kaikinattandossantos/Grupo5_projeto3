@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Solicitar Cartão Digital — Endered</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: #060d06;
+            --surface: #0c160c;
+            --surface2: #101d10;
+            --border: rgba(74, 222, 128, 0.15);
+            --green: #4ade80;
+            --green2: #22c55e;
+            --greenDim: rgba(74, 222, 128, 0.08);
+            --greenGlow: rgba(74, 222, 128, 0.3);
+            --text: #e8f5e8;
+            --textMid: #8fba8f;
+            --textDim: #4a6a4a;
+            --accent: #a3e635;
+            --error: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; right: 0;
+            width: 600px; height: 600px;
+            background: radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        nav {
+            position: sticky;
+            top: 0; z-index: 100;
+            background: rgba(6,13,6,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--green);
+            text-decoration: none;
+        }
+
+        .logo-dot {
+            width: 10px; height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 8px var(--green); }
+            50% { box-shadow: 0 0 20px var(--green), 0 0 40px var(--greenGlow); }
+        }
+
+        .back-link {
+            color: var(--textMid);
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--green); }
+
+        /* PAGE */
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        /* LEFT PANEL */
+        .info-panel {
+            position: sticky;
+            top: 84px;
+        }
+
+        .info-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--green);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            background: var(--greenDim);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 100px;
+        }
+
+        .info-panel h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .info-panel h2 span { color: var(--green); }
+
+        .info-panel p {
+            color: var(--textMid);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .benefit {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .benefit:hover {
+            border-color: rgba(74,222,128,0.3);
+            background: var(--greenDim);
+        }
+
+        .benefit-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+        .benefit-text strong {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .benefit-text span {
+            font-size: 0.8rem;
+            color: var(--textDim);
+        }
+
+        /* FORM PANEL */
+        .form-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .form-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(74,222,128,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-header h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .form-header p {
+            font-size: 0.8rem;
+            color: var(--textDim);
+            margin-top: 4px;
+        }
+
+        .form-body { padding: 2rem; }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--textMid);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+        }
+
+        input::placeholder { color: var(--textDim); }
+
+        input:focus, select:focus {
+            border-color: var(--green2);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
+        }
+
+        input.error { border-color: var(--error); }
+
+        select option {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* SUBMIT */
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--green);
+            color: var(--bg);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent);
+            box-shadow: 0 0 30px var(--greenGlow), 0 4px 20px rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:active { transform: translateY(0); }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* SUCCESS STATE */
+        .success-screen {
+            display: none;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-screen h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--green);
+            margin-bottom: 0.75rem;
+        }
+
+        .success-screen p {
+            color: var(--textMid);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .impact-preview {
+            background: var(--greenDim);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .impact-preview p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--textMid);
+        }
+
+        .impact-preview strong {
+            color: var(--green);
+            font-family: 'Syne', sans-serif;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--textMid);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { border-color: var(--green); color: var(--green); }
+
+        /* ALERT */
+        .alert {
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .alert-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--error); }
+
+        /* PROGRESS */
+        .progress-bar {
+            display: none;
+            height: 3px;
+            background: var(--border);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            transition: width 2s ease;
+            border-radius: 100px;
+        }
+
+        @media (max-width: 900px) {
+            .page { grid-template-columns: 1fr; gap: 2rem; }
+            .info-panel { position: static; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="/" class="logo">
+        <div class="logo-dot"></div>
+        endered
+    </a>
+    <a href="/" class="back-link">← Voltar ao Dashboard</a>
+</nav>
+
+<div class="page">
+
+    <!-- LEFT: INFO -->
+    <div class="info-panel">
+        <div class="info-label">🌱 Digitalização Verde</div>
+        <h2>Seu cartão.<br><span>Seu legado</span> verde.</h2>
+        <p>
+            Ao optar pelo cartão digital, você elimina a emissão de plástico PVC, 
+            economiza energia e água e reduz emissões de CO₂.
+            É uma escolha simples com impacto real.
+        </p>
+
+        <div class="benefits">
+            <div class="benefit">
+                <div class="benefit-icon">☁️</div>
+                <div class="benefit-text">
+                    <strong>150g de CO₂ evitados</strong>
+                    <span>Por cartão físico não produzido</span>
+                </div>
+            </div>
+            <div class="benefit">
+                <div class="benefit-icon">♻️</div>
+                <div class="benefit-text">
+                    <strong>5g de PVC eliminados</strong>
+                    <span>Plástico que levaria 400 anos para decompor</span>
+                </div>
+            </div>
+            <div class="benefit">
+                <div class="benefit-icon">🌊</div>
+                <div class="benefit-text">
+                    <strong>1,5 litros de água poupados</strong>
+                    <span>Usados no processo de laminação</span>
+                </div>
+            </div>
+            <div class="benefit">
+                <div class="benefit-icon">📱</div>
+                <div class="benefit-text">
+                    <strong>Sempre com você</strong>
+                    <span>No celular, nunca perde ou esquece</span>
+                </div>
+            </div>
+            <div class="benefit">
+                <div class="benefit-icon">🔒</div>
+                <div class="benefit-text">
+                    <strong>Mais seguro</strong>
+                    <span>Bloqueio instantâneo, sem risco de clonagem física</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: FORM -->
+    <div class="form-panel">
+        <div class="form-header">
+            <h3>Solicitar Cartão Digital</h3>
+            <p>Preenchimento simples • Aprovação imediata • 100% gratuito</p>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="success-screen" id="successScreen">
+            <div class="success-icon">🎉</div>
+            <h3>Cartão Digital Criado!</h3>
+            <p>Seu cartão digital foi gerado com sucesso.<br>Você receberá um e-mail com os dados de acesso.</p>
+
+            <div class="impact-preview">
+                <p>🌿 Sua contribuição de hoje:</p>
+                <p>Você ajudou a evitar a emissão de <strong>150g de CO₂</strong>, economizar 
+                <strong>1,5L de água</strong> e eliminar <strong>5g de PVC</strong> do planeta.</p>
+            </div>
+
+            <a href="/" class="back-btn">← Ver meu impacto no dashboard</a>
+        </div>
+
+        <!-- FORM -->
+        <div class="form-body" id="formBody">
+            <div class="alert alert-error" id="alertError"></div>
+
+            <div class="form-group">
+                <label>Nome Completo *</label>
+                <input type="text" id="nomeCompleto" placeholder="Seu nome completo" required/>
+            </div>
+
+            <div class="form-group">
+                <label>E-mail *</label>
+                <input type="email" id="email" placeholder="seu@email.com" required/>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CPF ou CNPJ *</label>
+                    <input type="text" id="cpfCnpj" placeholder="000.000.000-00" required/>
+                </div>
+                <div class="form-group">
+                    <label>Telefone *</label>
+                    <input type="tel" id="telefone" placeholder="(00) 90000-0000" required/>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Cidade *</label>
+                    <select id="cidade" onchange="onCidadeChange()">
+                        <option value="">Selecione...</option>
+                        <option value="São Paulo|SP|-23.5505|-46.6333">São Paulo</option>
+                        <option value="Rio de Janeiro|RJ|-22.9068|-43.1729">Rio de Janeiro</option>
+                        <option value="Belo Horizonte|MG|-19.9191|-43.9386">Belo Horizonte</option>
+                        <option value="Curitiba|PR|-25.4290|-49.2671">Curitiba</option>
+                        <option value="Porto Alegre|RS|-30.0346|-51.2177">Porto Alegre</option>
+                        <option value="Salvador|BA|-12.9714|-38.5014">Salvador</option>
+                        <option value="Fortaleza|CE|-3.7319|-38.5267">Fortaleza</option>
+                        <option value="Recife|PE|-8.0476|-34.8770">Recife</option>
+                        <option value="Brasília|DF|-15.7801|-47.9292">Brasília</option>
+                        <option value="Manaus|AM|-3.1190|-60.0217">Manaus</option>
+                        <option value="Belém|PA|-1.4558|-48.5044">Belém</option>
+                        <option value="Goiânia|GO|-16.6869|-49.2648">Goiânia</option>
+                        <option value="Campinas|SP|-22.9056|-47.0608">Campinas</option>
+                        <option value="São Luís|MA|-2.5307|-44.3068">São Luís</option>
+                        <option value="Natal|RN|-5.7945|-35.2110">Natal</option>
+                        <option value="Maceió|AL|-9.6658|-35.7350">Maceió</option>
+                        <option value="Teresina|PI|-5.0892|-42.8019">Teresina</option>
+                        <option value="Campo Grande|MS|-20.4428|-54.6460">Campo Grande</option>
+                        <option value="João Pessoa|PB|-7.1153|-34.8641">João Pessoa</option>
+                        <option value="Aracaju|SE|-10.9472|-37.0731">Aracaju</option>
+                        <option value="Outra|BR|-15.7801|-47.9292">Outra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <input type="text" id="estado" placeholder="UF" readonly style="background:var(--surface2); cursor:default;"/>
+                </div>
+            </div>
+
+            <input type="hidden" id="latitude"/>
+            <input type="hidden" id="longitude"/>
+
+            <div class="form-group">
+                <label>Tipo de Cartão *</label>
+                <select id="tipoCartao">
+                    <option value="">Selecione o tipo...</option>
+                    <option value="CARTAO_BENEFICIOS">🎁 Cartão de Benefícios</option>
+                    <option value="CARTAO_PRESENTE">🎀 Cartão Presente</option>
+                    <option value="CARTAO_FIDELIDADE">⭐ Cartão Fidelidade</option>
+                    <option value="CARTAO_CORPORATIVO">💼 Cartão Corporativo</option>
+                </select>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+                🌱 Solicitar Meu Cartão Digital
+            </button>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <p style="text-align:center; font-size:0.75rem; color:var(--textDim); margin-top:1rem;">
+                Seus dados estão protegidos • Aprovação em segundos • Sem taxas
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// CPF MASK
+document.getElementById('cpfCnpj').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length <= 11) {
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+        v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    }
+    e.target.value = v;
+});
+
+// PHONE MASK
+document.getElementById('telefone').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    v = v.replace(/^(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{5})(\d{4})$/, '$1-$2');
+    e.target.value = v;
+});
+
+// CITY CHANGE
+function onCidadeChange() {
+    const sel = document.getElementById('cidade');
+    const val = sel.value;
+    if (!val) return;
+    const parts = val.split('|');
+    document.getElementById('estado').value = parts[1];
+    document.getElementById('latitude').value = parts[2];
+    document.getElementById('longitude').value = parts[3];
+}
+
+// SUBMIT
+async function submitForm() {
+    const fields = ['nomeCompleto','email','cpfCnpj','telefone','cidade','tipoCartao'];
+    let valid = true;
+
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value) {
+            el.classList.add('error');
+            valid = false;
+        } else {
+            el.classList.remove('error');
+        }
+    });
+
+    if (!valid) {
+        showError('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+
+    const cidadeParts = document.getElementById('cidade').value.split('|');
+
+    const payload = {
+        nomeCompleto: document.getElementById('nomeCompleto').value,
+        email: document.getElementById('email').value,
+        cpfCnpj: document.getElementById('cpfCnpj').value,
+        telefone: document.getElementById('telefone').value,
+        cidade: cidadeParts[0],
+        estado: cidadeParts[1],
+        latitude: parseFloat(cidadeParts[2]) + (Math.random() - 0.5) * 0.05,
+        longitude: parseFloat(cidadeParts[3]) + (Math.random() - 0.5) * 0.05,
+        tipoCartao: document.getElementById('tipoCartao').value
+    };
+
+    // Show progress
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Processando...';
+    document.getElementById('progressBar').style.display = 'block';
+    setTimeout(() => document.getElementById('progressFill').style.width = '80%', 50);
+
+    try {
+        const res = await fetch('/api/cartoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.sucesso) {
+            document.getElementById('progressFill').style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('formBody').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'block';
+            }, 500);
+        } else {
+            showError(data.mensagem || 'Erro ao processar solicitação.');
+            btn.disabled = false;
+            btn.innerHTML = '🌱 Solicitar Meu Cartão Digital';
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+    } catch (e) {
+        showError('Erro de conexão. Verifique sua internet e tente novamente.');
+        btn.disabled = false;
+        btn.innerHTML = '🌱 Solicitar Meu Cartão Digital';
+        document.getElementById('progressBar').style.display = 'none';
+    }
+}
+
+function showError(msg) {
+    const el = document.getElementById('alertError');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+</script>
+</body>
+</html>
