@@ -198,24 +198,27 @@ Para nosso projeto utilizamos baseado em Git Flow Simplificado e Commits Semânt
 - `bugfix/` ou `hotfix/`: Utilizadas para correções de falhas, bugs e ajustes críticos, com destinos diferentes dependendo da urgência:
   - `bugfix/`: Erros encontrados durante o desenvolvimento ou testes. Ramifica da `develop` e retorna para a `develop`.
   - `hotfix/`: Erros críticos encontrados em produção. Ramifica da `main` e, após corrigido, o Pull Request deve ser enviado para a `main` e também para a `develop` (para garantir que o erro não volte nas próximas atualizações).
-  - *Exemplo:* `bugfix/correcao-layout-solicitacao` ou `hotfix/queda-servidor-banco`
+    - *Exemplo:* `bugfix/correcao-layout-solicitacao` ou `hotfix/queda-servidor-banco`
 
 2. Padrão de Commits Semânticos
 
-  As mensagens de commit devem ser objetivas e indicar a natureza da alteração, utilizando os seguintes prefixos obrigatórios:
+    As mensagens de commit devem ser objetivas e indicar a natureza da alteração, utilizando os seguintes prefixos obrigatórios:
+  
+    - `feat`: Inclusão de uma nova funcionalidade ou recurso.
+    - `fix`: Correção de um bug ou comportamento inesperado no sistema.
+    - `style`: Alterações puramente visuais (HTML/CSS) ou de formatação que não afetam a regra de negócio.
+    - `docs`: Criação ou atualizações na documentação e comentários do código.
 
-  - feat: Inclusão de uma nova funcionalidade ou recurso.
-  - fix: Correção de um bug ou comportamento inesperado no sistema.
-  - style: Alterações puramente visuais (HTML/CSS) ou de formatação que não afetam a regra de negócio.
-  - docs: Criação ou atualizações na documentação e comentários do código.
+3. Ciclo de Desenvolvimento
+   
+    O nosso ciclo de desenvolvimento foi desenhado para proteger a estabilidade do sistema e facilitar a colaboração entre toda a equipe,cada nova implementação deve seguir estes passos:
 
-3. Fluxo de Trabalho (Workflow)
-
-  1. *Sincronização:* Garanta que seu repositório local está sincronizado com a branch principal (git pull origin main).
-  2. *Ramificação:* Crie a branch correspondente à sua tarefa (ex: git checkout -b feature/nome-da-tarefa).
-  3. *Desenvolvimento:* Realize as alterações necessárias e efetue os commits seguindo o padrão semântico definido.
-  4. *Pull Request (PR):* Faça o envio (push) da branch para o repositório remoto e abra um Pull Request direcionado à branch main.
-  5. *Code Review e Merge:* O código deve ser revisado por ao menos um outro membro da equipe. Após a aprovação, o merge é realizado e a    branch de desenvolvimento pode ser descartada
+    1. **Sincronização:** Garanta que seu repositório local está sincronizado com a branch principal (git pull origin main).
+    2. **Ramificação:** Crie a branch específica para a sua tarefa a partir da `develop` (ex: `git checkout -b feature/nome-da-tarefa`).
+    3. **Desenvolvimento:** Realize as alterações necessárias e efetue os commits seguindo o padrão semântico definido.
+    4. **Pull Request (PR):** Após a conclusão da tarefa, envie sua branch para o repositório remoto (`git push origin feature/nome-da-tarefa`) e abra um Pull Request apontando de volta para a branch `develop`.
+    5. **Code Review e Merge:** O código deve ser revisado por ao menos um outro membro da equipe. Após a aprovação, o merge é realizado e a branch de feature pode ser descartada
+    6. **Lançamento (Release para a Main):** Quando a branch `develop` acumular um conjunto de funcionalidades estáveis e testadas, é aberto um Pull Request final da `develop` para a `main`. Após a aprovação deste merge, a nova versão do sistema entra oficialmente em produção (MVP).
 
 ---
 
