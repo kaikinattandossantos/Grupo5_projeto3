@@ -1,11 +1,9 @@
 package br.com.greenpayimpact.calculadora.controller;
 
 import br.com.greenpayimpact.calculadora.dto.CalculoRequest;
-import br.com.greenpayimpact.calculadora.model.Empresa;
-import br.com.greenpayimpact.calculadora.repository.EmpresaRepository;
 import br.com.greenpayimpact.calculadora.service.CalculoService;
+import br.com.greenpayimpact.calculadora.service.EmpresaService;
 import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -22,12 +20,8 @@ public class CalculoController {
     private CalculoService calculoService;
 
     @Autowired
-    private EmpresaRepository empresaRepository;
+    private EmpresaService empresaService;
 
-
-    /**
-     * Baseado nos fatores: Físico (0,0005kg) e Digital (0,00002kg)
-     */
     @PostMapping("/calcular-impacto")
     public ResponseEntity<?> executarCalculo(@RequestBody @Valid CalculoRequest request, BindingResult result) {
         
@@ -35,17 +29,10 @@ public class CalculoController {
             String mensagemErro = result.getAllErrors().get(0).getDefaultMessage();
             return ResponseEntity.badRequest().body(Map.of("erro", mensagemErro));
         }
-
-        Empresa empresa = new Empresa();
-        empresa.setRazaoSocial(request.getRazaoSocial());
-        empresa.setCnpj(request.getCnpj());
-        empresa.setEmail(request.getEmail());
-        empresa.setQtdTransacoesAnuais(request.getTransacoes());
-        
-        empresaRepository.save(empresa);
+        empresaService.salvarEmpresa(request);
         
         Map<String, BigDecimal> calculo = calculoService.calcularImpacto(request.getTransacoes());        
+        
         return ResponseEntity.ok(calculo);
     }
-
 }
