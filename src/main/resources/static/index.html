@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenPay Impact | Edenred</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <main class="calculator-card">
+            <header>
+                <h1>GreenPay Impact</h1>
+            </header>
+
+
+            <section class="input-section">
+                <div class="field">
+                    <label>Razão Social</label>
+                    <input type="text" id="razaoSocialInput" required>
+                </div>
+
+                <div class="field">
+                    <label>CNPJ (apenas números)</label>
+                    <input type="text" id="cnpjInput" maxlength="14" required>
+                </div>
+
+                <div class="field">
+                    <label>E-mail de Contato</label>
+                    <input type="email" id="emailInput" required>
+                </div>
+
+                <div class="field">
+                    <label>Volume de Transações</label>
+                    <input type="number" id="transacoesInput" min="1" required>
+                </div>
+
+                <button onclick="realizarAnalise()">Gerar Cálculo</button>
+                <p id="msgErro" style="color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none;"></p>
+            </section>
+
+            <section id="resultsSection" class="results-hidden">
+                <div class="metrics">
+                    <div class="metric-box highlight">
+                        <span>CO₂ Evitado</span>
+                        <h2 id="co2EvitadoVal">0.00000</h2>
+                        <small>kg/ano</small>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <canvas id="impactChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
