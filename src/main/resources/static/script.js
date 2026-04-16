@@ -1,3 +1,4 @@
+/* global Chart */
 let chartInstance = null;
 
 async function realizarAnalise() {
@@ -56,7 +57,13 @@ function exibirErro(mensagem) {
 function exibirResultados(data) {
     const section = document.getElementById('resultsSection');
     section.classList.replace('results-hidden', 'results-visible');
+    
     document.getElementById('co2EvitadoVal').innerText = data.co2Evitado.toFixed(5);
+    
+    document.getElementById('arvoresVal').innerText = data.arvoresEquivalentes.toFixed(1);
+    document.getElementById('kmVal').innerText = Math.floor(data.kmEvitados).toLocaleString('pt-BR');
+    document.getElementById('garrafasVal').innerText = Math.floor(data.garrafasPetEvitadas).toLocaleString('pt-BR');
+
     atualizarGrafico(data.impactoFisico, data.impactoDigital);
 }
 

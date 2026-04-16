@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 
 @CrossOrigin(origins = "*")
@@ -22,10 +23,12 @@ public class CalculoController {
     @PostMapping("/empresas")
     public ResponseEntity<?> cadastrarEmpresa(@RequestBody @Valid CalculoRequest request, BindingResult result) {
         if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(Map.of("erro", result.getAllErrors().get(0).getDefaultMessage()));
+            String mensagemErro = result.getAllErrors().get(0).getDefaultMessage();
+            return ResponseEntity.badRequest().body(Map.of("erro", mensagemErro));
         }
+
         Empresa empresaSalva = empresaService.salvarEmpresa(request);
-        return ResponseEntity.ok(empresaSalva); 
+        return ResponseEntity.ok(empresaSalva);
     }
 
     @GetMapping("/calcular-impacto/{id}")
