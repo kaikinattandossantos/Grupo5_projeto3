@@ -1,5 +1,11 @@
 package br.com.greenpayimpact.calculadora.service;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
 import br.com.greenpayimpact.calculadora.dto.CalculoRequest;
 import br.com.greenpayimpact.calculadora.dto.CalculoResponse;
 import br.com.greenpayimpact.calculadora.model.Empresa;
@@ -7,11 +13,6 @@ import br.com.greenpayimpact.calculadora.model.FatorEmissao;
 import br.com.greenpayimpact.calculadora.model.TipoTransacao;
 import br.com.greenpayimpact.calculadora.repository.EmpresaRepository;
 import br.com.greenpayimpact.calculadora.repository.FatorEmissaoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Sort;
-
-import java.util.List;
 
 @Service
 public class EmpresaService {

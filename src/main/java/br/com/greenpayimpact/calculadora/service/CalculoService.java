@@ -1,14 +1,15 @@
 package br.com.greenpayimpact.calculadora.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import br.com.greenpayimpact.calculadora.dto.CalculoResponse;
 import br.com.greenpayimpact.calculadora.model.FatorEmissao;
 import br.com.greenpayimpact.calculadora.model.TipoTransacao;
 import br.com.greenpayimpact.calculadora.repository.FatorEmissaoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Service
 public class CalculoService {

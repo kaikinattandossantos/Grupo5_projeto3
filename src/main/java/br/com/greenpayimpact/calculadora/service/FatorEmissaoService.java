@@ -1,16 +1,17 @@
 package br.com.greenpayimpact.calculadora.service;
 
-import br.com.greenpayimpact.calculadora.dto.FatorEmissaoRequest;
-import br.com.greenpayimpact.calculadora.dto.FatorEmissaoResponse;
-import br.com.greenpayimpact.calculadora.model.FatorEmissao;
-import br.com.greenpayimpact.calculadora.repository.FatorEmissaoRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import br.com.greenpayimpact.calculadora.dto.FatorEmissaoRequest;
+import br.com.greenpayimpact.calculadora.dto.FatorEmissaoResponse;
+import br.com.greenpayimpact.calculadora.model.FatorEmissao;
+import br.com.greenpayimpact.calculadora.repository.FatorEmissaoRepository;
 
 @Service
 public class FatorEmissaoService {

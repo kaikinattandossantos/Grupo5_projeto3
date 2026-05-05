@@ -30,7 +30,7 @@ async function realizarAnalise() {
             const empresaSalva = await responseCadastro.json();
             const idGerado = empresaSalva.id;
 
-            const responseCalculo = await fetch(`http://localhost:8081/api/calcular-impacto/${idGerado}`);
+            const responseCalculo = await fetch(`http://localhost:8081/api/empresas/${idGerado}/impacto`);
 
             if (responseCalculo.ok) {
                 const dataCalculo = await responseCalculo.json();
@@ -219,7 +219,7 @@ async function carregarHistorico() {
 
 async function revisualizar(id, nomeCodificado) {
     try {
-        const res = await fetch(`http://localhost:8081/api/calcular-impacto/${id}`);
+        const res = await fetch(`http://localhost:8081/api/empresas/${id}/impacto`);
         if (!res.ok) throw new Error("Falha na simulação");
         
         const data = await res.json();
