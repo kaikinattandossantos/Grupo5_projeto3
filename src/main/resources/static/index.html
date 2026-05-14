@@ -108,11 +108,15 @@
         </main>
     </div>
 
-    <!-- Modal Histórico Existente -->
     <div id="modalHistorico" class="modal">
         <div class="modal-content">
             <span class="close" onclick="fecharModalHistorico()">&times;</span>
             <h2 class="modal-title">Histórico de Impacto</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="buscaHistoricoInput" onkeyup="filtrarHistorico()" placeholder="Buscar por Nome ou CNPJ..." style="width: 100%; padding: 12px; border-radius: 8px; background: #1a1a1a; color: white; border: 1px solid #333; outline: none;">
+            </div>
+
             <div class="table-container">
                 <table id="tabelaHistorico">
                     <thead>

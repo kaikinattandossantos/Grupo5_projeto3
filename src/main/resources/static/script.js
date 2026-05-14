@@ -153,11 +153,33 @@ function atualizarGrafico(fisico, digital) {
 
 function abrirModalHistorico() {
     document.getElementById('modalHistorico').style.display = "block";
+    const campoBusca = document.getElementById('buscaHistoricoInput');
+    if (campoBusca) campoBusca.value = '';
     carregarHistorico();
 }
 
 function fecharModalHistorico() {
     document.getElementById('modalHistorico').style.display = "none";
+}
+
+function filtrarHistorico() {
+    const input = document.getElementById('buscaHistoricoInput');
+    const filtro = input.value.toLowerCase();
+    const linhas = document.querySelectorAll('#corpoHistorico tr');
+
+    linhas.forEach(linha => {
+        // Ignora linhas de estado como "Carregando..." ou "Nenhuma análise..." (que possuem menos colunas)
+        if (linha.cells.length < 4) return;
+        
+        const nome = linha.cells[0].innerText.toLowerCase();
+        const cnpj = linha.cells[1].innerText.toLowerCase();
+        
+        if (nome.includes(filtro) || cnpj.includes(filtro)) {
+            linha.style.display = "";
+        } else {
+            linha.style.display = "none";
+        }
+    });
 }
 
 window.onclick = function(event) {
