@@ -2,20 +2,25 @@ Chart.register(ChartDataLabels);
 let chartInstance = null;
 
 async function realizarAnalise() {
-    const razao = document.getElementById('razaoSocialInput').value;
-    const cnpj = document.getElementById('cnpjInput').value;
-    const email = document.getElementById('emailInput').value;
+    const nome = document.getElementById('razaoSocialInput').value.trim();
+    const cnpj = document.getElementById('cnpjInput').value.trim();
+    const email = document.getElementById('emailInput').value.trim();
     const volume = document.getElementById('transacoesInput').value;
 
-    if (cnpj.length !== 14) {
-        alert("O CNPJ precisa de ter exatamente 14 números!");
+    if (cnpj.length > 0 && cnpj.length !== 14) {
+        alert("Se preenchido, o CNPJ precisa ter exatamente 14 números!");
+        return;
+    }
+
+    if (!volume || parseInt(volume) < 1) {
+        alert("Por favor, insira um volume válido de transações.");
         return;
     }
 
     const payload = {
-        razaoSocial: razao,
-        cnpj: cnpj,
-        email: email,
+        nomeEmpresa: nome || null,
+        cnpj: cnpj || null,
+        email: email || null,
         transacoes: parseInt(volume)
     };
 
@@ -27,21 +32,21 @@ async function realizarAnalise() {
         });
 
         if (responseCadastro.ok) {
-            const empresaSalva = await responseCadastro.json();
-            const idGerado = empresaSalva.id;
+            const dadosProcessados = await responseCadastro.json();
+            const idResultado = dadosProcessados.id;
 
-            const responseCalculo = await fetch(`http://localhost:8081/api/empresas/${idGerado}/impacto`);
+            const responseCalculo = await fetch(`http://localhost:8081/api/empresas/${idResultado}/impacto`);
 
             if (responseCalculo.ok) {
                 const dataCalculo = await responseCalculo.json();
-                exibirResultados(dataCalculo, razao);
+                exibirResultados(dataCalculo, nome, dadosProcessados.anonimo);
                 document.getElementById('msgErro').style.display = "none";
             } else {
-                exibirErro("Erro ao realizar o cálculo para esta empresa.");
+                exibirErro("Erro ao recuperar a matemática do cálculo.");
             }
         } else {
             const erroBackend = await responseCadastro.json();
-            exibirErro(erroBackend.erro || "Erro ao cadastrar empresa.");
+            exibirErro(erroBackend.erro || "Erro ao processar simulação.");
         }
     } catch (err) {
         alert("Servidor Offline ou Erro de Rede!");
@@ -54,8 +59,17 @@ function exibirErro(mensagem) {
     display.style.display = "block";
 }
 
-function exibirResultados(data, nomeEmpresa) {
-    document.getElementById('nomeEmpresaRelatorio').innerText = nomeEmpresa || "Empresa Não Identificada";
+function exibirResultados(data, nomeEmpresa, isAnonimo) {
+    const tituloRelatorio = document.getElementById('nomeEmpresaRelatorio');
+    
+    // Tratamento B2B Profissional utilizando manipulação limpa de classes CSS
+    if (isAnonimo || !nomeEmpresa) {
+        tituloRelatorio.innerText = "Simulação Expressa (Não Identificada)";
+        tituloRelatorio.classList.add('titulo-anonimo');
+    } else {
+        tituloRelatorio.innerText = nomeEmpresa;
+        tituloRelatorio.classList.remove('titulo-anonimo');
+    }
     
     const section = document.getElementById('resultsSection');
     section.classList.replace('results-hidden', 'results-visible');
@@ -69,6 +83,7 @@ function exibirResultados(data, nomeEmpresa) {
     document.getElementById('garrafasVal').innerText = Math.floor(data.garrafasPetEvitadas).toLocaleString('pt-BR');
 
     atualizarGrafico(data.impactoFisico, data.impactoDigital);
+    section.scrollIntoView({ behavior: 'smooth' });
 }
 
 function atualizarGrafico(fisico, digital) {
@@ -103,16 +118,14 @@ function atualizarGrafico(fisico, digital) {
             devicePixelRatio: 3,
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: { top: 30 }
-            },
+            layout: { padding: { top: 30 } },
             plugins: {
                 legend: { display: false },
                 title: {
                     display: true,
                     text: 'Comparativo de Emissão (kg CO₂)',
                     color: '#ffffff',
-                    font: { size: 16, weight: 'bold', family: 'Segoe UI' },
+                    font: { size: 16, weight: 'bold' },
                     padding: { bottom: 5 }
                 },
                 subtitle: {
@@ -128,35 +141,11 @@ function atualizarGrafico(fisico, digital) {
                     align: 'top',
                     formatter: (value) => value.toFixed(4) + ' kg',
                     font: { weight: 'bold', size: 13 }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(17, 17, 17, 0.9)',
-                    titleFont: { size: 14 },
-                    bodyFont: { size: 14, weight: 'bold' },
-                    padding: 15,
-                    borderColor: '#333',
-                    borderWidth: 1,
-                    displayColors: false,
-                    callbacks: {
-                        label: (context) => `Emissão: ${context.raw.toFixed(5)} kg`
-                    }
                 }
             },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { 
-                        color: 'rgba(255, 255, 255, 0.05)',
-                        borderDash: [5, 5]
-                    },
-                    ticks: { color: '#666', padding: 10 },
-                    border: { display: false }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#ccc', font: { size: 13, weight: '600' } },
-                    border: { display: false }
-                }
+                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#666' } },
+                x: { grid: { display: false }, ticks: { color: '#ccc' } }
             }
         }
     });
@@ -164,6 +153,8 @@ function atualizarGrafico(fisico, digital) {
 
 function abrirModalHistorico() {
     document.getElementById('modalHistorico').style.display = "block";
+    const campoBusca = document.getElementById('buscaHistoricoInput');
+    if (campoBusca) campoBusca.value = '';
     carregarHistorico();
 }
 
@@ -171,16 +162,29 @@ function fecharModalHistorico() {
     document.getElementById('modalHistorico').style.display = "none";
 }
 
-// Fechamento de modais clicando fora
+function filtrarHistorico() {
+    const input = document.getElementById('buscaHistoricoInput');
+    const filtro = input.value.toLowerCase();
+    const linhas = document.querySelectorAll('#corpoHistorico tr');
+
+    linhas.forEach(linha => {
+        // Ignora linhas de estado como "Carregando..." ou "Nenhuma análise..." (que possuem menos colunas)
+        if (linha.cells.length < 4) return;
+        
+        const nome = linha.cells[0].innerText.toLowerCase();
+        const cnpj = linha.cells[1].innerText.toLowerCase();
+        
+        if (nome.includes(filtro) || cnpj.includes(filtro)) {
+            linha.style.display = "";
+        } else {
+            linha.style.display = "none";
+        }
+    });
+}
+
 window.onclick = function(event) {
-    const modalHist = document.getElementById('modalHistorico');
-    const modalAdmin = document.getElementById('modalAdmin');
-    if (event.target === modalHist) {
-        fecharModalHistorico();
-    }
-    if (event.target === modalAdmin) {
-        fecharModalAdmin();
-    }
+    if (event.target === document.getElementById('modalHistorico')) fecharModalHistorico();
+    if (event.target === document.getElementById('modalAdmin')) fecharModalAdmin();
 }
 
 async function carregarHistorico() {
@@ -190,25 +194,25 @@ async function carregarHistorico() {
     try {
         const res = await fetch('http://localhost:8081/api/empresas');
         if (!res.ok) throw new Error("Falha na API");
-        const empresas = await res.json();
+        const simulacoes = await res.json();
         
         corpo.innerHTML = '';
-        
-        if (empresas.length === 0) {
-            corpo.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Nenhuma análise realizada ainda.</td></tr>';
+        if (simulacoes.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Nenhuma análise com identificação realizada ainda.</td></tr>';
             return;
         }
 
-        empresas.forEach(emp => {
-            const dataFormatada = new Date(emp.criadoEm).toLocaleDateString('pt-BR');
-            const nomeCodificado = encodeURIComponent(emp.razaoSocial);
+        simulacoes.forEach(sim => {
+            const dataFormatada = new Date(sim.criadoEm).toLocaleDateString('pt-BR');
+            const nomeExibicao = sim.razaoSocial || "Empresa " + sim.cnpj;
+            const nomeCodificado = encodeURIComponent(nomeExibicao);
 
             corpo.innerHTML += `
                 <tr>
-                    <td>${emp.razaoSocial}</td>
-                    <td>${emp.cnpj}</td>
+                    <td>${nomeExibicao}</td>
+                    <td>${sim.cnpj}</td>
                     <td>${dataFormatada}</td>
-                    <td><button class="btn-view" onclick="revisualizar(${emp.id}, '${nomeCodificado}')">VER</button></td>
+                    <td><button class="btn-view" onclick="revisualizar(${sim.id}, '${nomeCodificado}')">VER</button></td>
                 </tr>
             `;
         });
@@ -217,44 +221,33 @@ async function carregarHistorico() {
     }
 }
 
-async function revisualizar(id, nomeCodificado) {
+async function revisualizar(idResultado, nomeCodificado) {
     try {
-        const res = await fetch(`http://localhost:8081/api/empresas/${id}/impacto`);
+        const res = await fetch(`http://localhost:8081/api/empresas/${idResultado}/impacto`);
         if (!res.ok) throw new Error("Falha na simulação");
         
         const data = await res.json();
         fecharModalHistorico();
-        exibirResultados(data, decodeURIComponent(nomeCodificado));
-        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        exibirResultados(data, decodeURIComponent(nomeCodificado), false);
     } catch (err) {
-        alert("Erro ao recuperar os dados dessa simulação.");
+        alert("Erro ao recuperar os dados dessa simulação congelada.");
     }
 }
 
-function gerarRelatorio() {
-    window.print();
-}
-
+function gerarRelatorio() { window.print(); }
 
 function abrirModalAdmin() {
     document.getElementById('modalAdmin').style.display = "block";
     carregarHistoricoFatores();
 }
-
-function fecharModalAdmin() {
-    document.getElementById('modalAdmin').style.display = "none";
-}
+function fecharModalAdmin() { document.getElementById('modalAdmin').style.display = "none"; }
 
 async function salvarNovoFator() {
     const tipo = document.getElementById('fatorTipo').value;
     const valor = parseFloat(document.getElementById('fatorValor').value);
     const fonte = document.getElementById('fatorFonte').value;
 
-    if (!valor || !fonte) {
-        alert("Preencha todos os campos do fator!");
-        return;
-    }
-
+    if (!valor || !fonte) { alert("Preencha todos os campos do fator!"); return; }
     const payload = { tipo: tipo, valor: valor, fonteMetodologia: fonte };
 
     try {
@@ -263,36 +256,27 @@ async function salvarNovoFator() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         if (response.ok) {
-            alert("Novo fator de emissão registrado com sucesso! O anterior foi arquivado.");
+            alert("Novo fator de emissão registrado! O anterior foi arquivado para auditoria.");
             document.getElementById('fatorValor').value = '';
             document.getElementById('fatorFonte').value = '';
-            carregarHistoricoFatores(); // Recarrega a tabela
+            carregarHistoricoFatores();
         } else {
             const erro = await response.json();
-            alert("Erro ao salvar: " + JSON.stringify(erro));
+            alert("Erro ao salvar: " + (erro.erro || JSON.stringify(erro)));
         }
-    } catch (err) {
-        alert("Erro de conexão com o servidor.");
-    }
+    } catch (err) { alert("Erro de conexão com o servidor."); }
 }
 
 async function carregarHistoricoFatores() {
     const tbody = document.getElementById('corpoTabelaFatores');
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>';
-
     try {
         const response = await fetch('http://localhost:8081/api/fatores');
         if (!response.ok) throw new Error("Falha ao buscar fatores");
-        
         const fatores = await response.json();
         tbody.innerHTML = '';
-
-        if(fatores.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum fator cadastrado.</td></tr>';
-            return;
-        }
+        if(fatores.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum fator cadastrado.</td></tr>'; return; }
 
         fatores.forEach(f => {
             const data = new Date(f.dataVigencia).toLocaleString('pt-BR');
@@ -310,7 +294,5 @@ async function carregarHistoricoFatores() {
                 </tr>
             `;
         });
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Erro ao carregar dados.</td></tr>';
-    }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Erro ao carregar dados.</td></tr>'; }
 }

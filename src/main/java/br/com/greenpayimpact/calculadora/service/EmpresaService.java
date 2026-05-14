@@ -1,18 +1,19 @@
 package br.com.greenpayimpact.calculadora.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import br.com.greenpayimpact.calculadora.dto.CalculoRequest;
 import br.com.greenpayimpact.calculadora.dto.CalculoResponse;
 import br.com.greenpayimpact.calculadora.model.Empresa;
-import br.com.greenpayimpact.calculadora.model.FatorEmissao;
-import br.com.greenpayimpact.calculadora.model.TipoTransacao;
+import br.com.greenpayimpact.calculadora.model.ResultadoCalculo;
 import br.com.greenpayimpact.calculadora.repository.EmpresaRepository;
-import br.com.greenpayimpact.calculadora.repository.FatorEmissaoRepository;
+import br.com.greenpayimpact.calculadora.repository.ResultadoCalculoRepository;
 
 @Service
 public class EmpresaService {
@@ -21,46 +22,55 @@ public class EmpresaService {
     private EmpresaRepository empresaRepository;
 
     @Autowired
-    private CalculoService calculoService;
+    private ResultadoCalculoRepository resultadoRepository;
 
     @Autowired
-    private FatorEmissaoRepository fatorRepository; 
+    private CalculoService calculoService;
 
-    public Empresa salvarEmpresa(CalculoRequest request) {
-        Empresa empresa = new Empresa();
-        empresa.setRazaoSocial(request.getRazaoSocial());
-        empresa.setCnpj(request.getCnpj());
-        empresa.setEmail(request.getEmail());
-        empresa.setQtdTransacoesAnuais(request.getTransacoes());
-        
-        // CONGELAMENTO DO HISTÓRICO: Pega o fator que está valendo AGORA e salva o ID
-        FatorEmissao fatorFisicoAtual = fatorRepository.findByTipoAndAtivoTrue(TipoTransacao.FISICA)
-            .orElseThrow(() -> new RuntimeException("Fator físico não configurado."));
-        FatorEmissao fatorDigitalAtual = fatorRepository.findByTipoAndAtivoTrue(TipoTransacao.DIGITAL)
-            .orElseThrow(() -> new RuntimeException("Fator digital não configurado."));
+    public Map<String, Object> processarCalculo(CalculoRequest request) {
+        Empresa empresa = null;
 
-        empresa.setFatorFisicoId(fatorFisicoAtual.getId());
-        empresa.setFatorDigitalId(fatorDigitalAtual.getId());
+        if (request.getCnpj() != null) {
+            String cnpj = request.getCnpj();
+            empresa = empresaRepository.findByCnpj(cnpj).orElse(new Empresa());
+            
+            empresa.setCnpj(cnpj);
+            
+            String nome = request.getNomeEmpresa();
+            empresa.setNomeEmpresa((nome != null) ? nome : "Empresa " + cnpj);
 
-        return empresaRepository.save(empresa);
-    }
+            String email = request.getEmail();
+            empresa.setEmail((email != null) ? email : "contato@" + cnpj + ".com");
 
-    public CalculoResponse calcularImpactoPorId(Long id) {
-        Empresa empresa = empresaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Empresa não encontrada com o ID: " + id));
-
-        if (empresa.getQtdTransacoesAnuais() <= 0) {
-            throw new RuntimeException("Volume de transações deve ser maior que zero.");
+            empresa = empresaRepository.save(empresa);
         }
+
+        ResultadoCalculo resultado = calculoService.calcularEPersistirImpacto(request.getTransacoes(), empresa);
+
         
-        return calculoService.calcularImpactoHistorico(
-            empresa.getQtdTransacoesAnuais(), 
-            empresa.getFatorFisicoId(), 
-            empresa.getFatorDigitalId()
-        );
+        Map<String, Object> resposta = new HashMap<>();
+        resposta.put("id", resultado.getId());
+        resposta.put("empresaId", (empresa != null) ? empresa.getId() : null);
+        resposta.put("anonimo", empresa == null);
+        return resposta;
     }
 
-    public List<Empresa> listarTodas() {
-        return empresaRepository.findAll(Sort.by(Sort.Direction.DESC, "criadoEm"));
+    public CalculoResponse buscarResultadoPorId(Long id) {
+        ResultadoCalculo resultado = resultadoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Resultado da simulação não encontrado com o ID: " + id));
+        return calculoService.mapearParaResponse(resultado);
+    }
+
+    public List<Map<String, Object>> listarHistoricoSimulacoes() {
+        List<ResultadoCalculo> resultados = resultadoRepository.findByEmpresaIsNotNullOrderByDataCalculoDesc();
+        
+        return resultados.stream().map(res -> {
+            Map<String, Object> mapa = new HashMap<>();
+            mapa.put("id", res.getId());
+            mapa.put("razaoSocial", res.getEmpresa().getNomeEmpresa());
+            mapa.put("cnpj", res.getEmpresa().getCnpj());
+            mapa.put("criadoEm", res.getDataCalculo());
+            return mapa;
+        }).collect(Collectors.toList());
     }
 }

@@ -352,3 +352,9 @@ td { padding: 12px; color: #ccc; border-bottom: 1px solid #1a1a1a; }
         display: block !important;
     }
 }
+
+.titulo-anonimo {
+    color: #ffc107 !important;
+    font-style: italic;
+    font-weight: 600;
+}
