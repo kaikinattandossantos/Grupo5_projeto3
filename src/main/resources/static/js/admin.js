@@ -1,8 +1,6 @@
 import { salvarFator, obterFatores } from './api.js';
 
-/**
- * Abre a modal administrativa e carrega o histórico de fatores.
- */
+
 export function abrirModalAdmin() {
     const modal = document.getElementById('modalAdmin');
     if (modal) {
@@ -11,9 +9,7 @@ export function abrirModalAdmin() {
     carregarHistoricoFatores();
 }
 
-/**
- * Fecha a modal administrativa.
- */
+
 export function fecharModalAdmin() {
     const modal = document.getElementById('modalAdmin');
     if (modal) {
@@ -21,9 +17,7 @@ export function fecharModalAdmin() {
     }
 }
 
-/**
- * Envia o novo fator cadastrado pelo formulário de admin.
- */
+
 export async function salvarNovoFator() {
     const tipo = document.getElementById('fatorTipo').value;
     const valorEl = document.getElementById('fatorValor');
@@ -50,9 +44,7 @@ export async function salvarNovoFator() {
     }
 }
 
-/**
- * Carrega a tabela com o histórico de fatores de emissão.
- */
+
 export async function carregarHistoricoFatores() {
     const tbody = document.getElementById('corpoTabelaFatores');
     if (!tbody) return;
