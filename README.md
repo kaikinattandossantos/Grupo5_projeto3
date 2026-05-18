@@ -73,39 +73,60 @@ Para nosso projeto utilizamos baseado em Git Flow Simplificado e Commits Semânt
 
 ---
 
-## 🚀 Requisitos e Como Executar
-Para rodar o projeto localmente, é necessário garantir que o ambiente atenda aos seguintes requisitos técnicos:
+### ✨ Arquitetura e Principais Funcionalidades
 
-### Requisitos Mínimos:
+O projeto evoluiu para uma arquitetura de API RESTful robusta, focada em rastreabilidade de dados ESG e experiência do usuário (UX) corporativa B2B.
 
-Java JDK 21: Versão utilizada para o desenvolvimento da API.
+* **Persistência e Rastreabilidade (Auditoria ESG):** Todo cálculo gerado é gravado de forma imutável no banco de dados. O sistema congela o ID exato do Fator de Emissão que estava vigente no milissegundo da simulação, garantindo que o histórico nunca seja corrompido caso os referenciais matemáticos mudem no futuro.
+* **Modelagem de Dados Normalizada:** O banco de dados foi estruturado com base em 4 entidades altamente coesas:
+  * `Empresa`: Cadastro puramente comercial (focado em fluxo opcional).
+  * `FatorEmissao`: Motor matemático com suporte a *Soft Delete* (arquivamento de versões obsoletas).
+  * `FatorConversaoAnalogia`: Parametrização 100% dinâmica das analogias científicas (Árvores, Km, Garrafas PET), eliminando valores chumbados (*hardcoded*) no código.
+  * `ResultadoCalculo`: Entidade central que une transações, resultados brutos, equivalências e a data exata.
+* **Cálculo Expresso (Foco em Conversão):** A API foi refatorada para aceitar simulações anônimas. O usuário preenche apenas o volume de transações, reduzindo o atrito (barreira de entrada) e gerando um relatório inteligente de "Simulação Expressa".
+* **Busca Instantânea em Memória:** A modal de histórico no frontend conta com um filtro reativo (`onkeyup`) que pesquisa por Nome Fantasia e CNPJ em tempo real, sem sobrecarregar o banco de dados.
 
-Maven 3.8+: Para a gestão de dependências e build do projeto.
+---
 
-PostgreSQL: Banco de dados utilizado para a persistência das informações.
+### 🚀 Requisitos e Como Executar
 
-### Como Rodar:
-1. Configuração do Banco de Dados
-    Antes de iniciar a aplicação, você deve criar um banco de dados no PostgreSQL com as seguintes configurações:
+####  Pré-requisitos Técnicos
+Antes de rodar a aplicação localmente, certifique-se de ter instalado em sua máquina:
+* **Java JDK 21**: Ambiente de execução e compilação da API Spring Boot.
+* **Maven 3.8+**: Gerenciador de dependências (opcional, visto que o projeto já inclui o utilitário nativo `mvnw`).
+* **PostgreSQL**: Banco de dados relacional para a persistência e rastreabilidade das simulações.
 
-    Nome do Banco: edenred_db
+####  1. Configuração do Banco de Dados
+A aplicação utiliza persistência automatizada e parametrização dinâmica de dados. Antes de iniciar o servidor, configure o seu ambiente local no PostgreSQL:
 
-    Usuário: postgres
+1. Crie um banco de dados vazio com o nome exato de: `edenred_db`
+2. Certifique-se de que as credenciais do seu serviço PostgreSQL correspondem às configurações padrão do projeto:
+   * **Usuário:** `postgres`
+   * **Senha:** `3456`
 
-    Senha: 3456
-   (Nota: O Spring Data JPA criará as tabelas automaticamente ao iniciar graças à propriedade `ddl-auto=update`).*
+> ** Nota de Praticidade:** Não é necessário executar nenhum script SQL manual para criar tabelas ou inserir registros iniciais. Graças à propriedade `ddl-auto=update` do Spring Data JPA e ao componente automático `DataInitializer`, toda a estrutura relacional (tabelas de empresas, histórico de resultados de cálculos, fatores de emissão e analogias científicas) é gerada e populada com os dados de referência no exato momento em que a aplicação é iniciada pela primeira vez.
 
-3. Execução
-    Clone o repositório e navegue até a pasta calculadora.
+####  2. Como Executar a Aplicação
 
-    Certifique-se de que o PostgreSQL está rodando.
+1. Abra o seu terminal e navegue até a pasta raiz do projeto:
+```bash
+cd calculadora
+```
+2. Certifique-se de que o serviço do seu PostgreSQL está ativo e rodando em segundo plano.
+3. Execute o comando do Maven Wrapper para compilar o ecossistema e iniciar o servidor embutido do Spring Boot:
+```bash
+./mvnw spring-boot:run
+```
+4. Aguarde a mensagem de confirmação no console indicando que o Tomcat foi iniciado com sucesso na porta **8081**.
 
-    Execute o comando Maven para iniciar o Spring Boot:
-   
-    *./mvnw spring-boot:run*
-   
-    Acesse a interface web em: http://localhost:8081/index.html.
-   
+####  3. Acesso à Interface do Usuário
+
+Com o servidor backend ativo, abra o seu navegador de preferência e acesse o endereço do ecossistema modular:
+```url
+http://localhost:8081/
+```
+*(Caso queira acessar o arquivo estático diretamente pelo mapeamento, utilize: `http://localhost:8081/index.html`)*
+
 ---
 
 ## Entrega 1
@@ -148,6 +169,7 @@ Para garantir a rastreabilidade das alterações e a organização das responsab
   ### Screencast 2
   [link para o Screencast](https://youtu.be/1URsS2YSoAY)
 
+---
 
 ## Entrega 3
   
@@ -167,4 +189,28 @@ Para garantir a rastreabilidade das alterações e a organização das responsab
 
   ### Screencast 3
   [link para o Screencast](https://youtu.be/5nE5RElzUXQ)
+  
+  ---
+
+ ## Entrega 4
+  
+### Evolução da Plataforma
+Nesta etapa, consolidamos a maturidade arquitetural da calculadora e aprimoramos as ferramentas de auditoria ESG e usabilidade B2B para os executivos da Edenred, implementando:
+- **Busca Instantânea no Histórico:** Inclusão de um filtro reativo em tempo real (`onkeyup`) na modal de listagem, permitindo localizar análises passadas de forma ágil digitando apenas trechos do Nome Fantasia ou CNPJ da empresa.
+- **Parametrização Dinâmica de Fatores & Analogias:** Migração completa das métricas e equivalências científicas (árvores, quilômetros e garrafas PET) de constantes chumbadas (*hardcoded*) no código para tabelas dedicadas no PostgreSQL, viabilizando atualizações de conformidade sem necessidade de novos *deploys*.
+- **Histórico Automático & Persistência:** Persistência permanente de toda simulação realizada na tabela do banco, congelando a fotografia exata dos fatores vigentes no milissegundo do cálculo para garantir rastreabilidade à auditoria.
+- **Gestão e Atualização de Fatores de Emissão:** Criação de um painel administrativo para inserção de novos referenciais científicos e metodologias (ex: GHG Protocol). O sistema arquiva automaticamente as versões obsoletas (*soft delete*), mantendo a integridade e rastreabilidade dos cálculos antigos.
+
+
+  ### Issue/Bug Tracker
+  O acompanhamento das tarefas foi feito novamente pelo GitHub Issues, estamos sempre utilizando ele como referência e incentivando o uso ativo.
+  
+  **Histórico de tarefas finalizadas:**
+<img src="prints/Issue-Closed-1805.png" width="1100">
+
+**Quadro de atividades atual:**
+<img src="prints/Issue-Open-1805.png" width="1100">
+
+  ### Screencast 4
+  [link para o Screencast](https://youtu.be/51KsWhH2UIw?si=riOcFOz8eDW5vQ3p)
 
