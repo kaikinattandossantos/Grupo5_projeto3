@@ -93,15 +93,16 @@ PostgreSQL: Banco de dados utilizado para a persistência das informações.
     Usuário: postgres
 
     Senha: 3456
+   (Nota: O Spring Data JPA criará as tabelas automaticamente ao iniciar graças à propriedade `ddl-auto=update`).*
 
-2. Execução
+3. Execução
     Clone o repositório e navegue até a pasta calculadora.
 
     Certifique-se de que o PostgreSQL está rodando.
 
     Execute o comando Maven para iniciar o Spring Boot:
    
-    ./mvnw spring-boot:run
+    *./mvnw spring-boot:run*
    
     Acesse a interface web em: http://localhost:8081/index.html.
    
@@ -144,5 +145,26 @@ Para garantir a rastreabilidade das alterações e a organização das responsab
 **Quadro de atividades atual:**
 <img src="prints/Issue-Open.png" width="1100">
 
-  ### Screencast 
+  ### Screencast 2
   [link para o Screencast](https://youtu.be/1URsS2YSoAY)
+
+
+## Entrega 3
+  
+  ### Novas Funcionalidades
+  Nesta entrega, focamos em transformar a calculadora numa ferramenta consultiva para os executivos da Edenred, implementando:
+  - **Histórico de Cálculos:** Visualização de simulações passadas com capacidade de revisualização de dados.
+  - **Relatório Executivo (PDF):** Exportação limpa e profissional dos resultados e analogias para apresentação a clientes B2B.
+
+  ### Issue/Bug Tracker
+  O acompanhamento das tarefas foi feito novamente pelo GitHub Issues, estamos sempre utilizando ele como referência e incentivando o uso ativo.
+  
+  **Histórico de tarefas finalizadas:**
+<img src="prints/Issue-Closed-2704.jpg" width="1100">
+
+**Quadro de atividades atual:**
+<img src="prints/Issue-Open-2704.jpg" width="1100">
+
+  ### Screencast 3
+  [link para o Screencast](https://youtu.be/5nE5RElzUXQ)
+
